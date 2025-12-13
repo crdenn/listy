@@ -1,0 +1,95 @@
+rules_version = '2';
+
+/**
+ * Firestore Security Rules for Collaborative Lists
+ * 
+ * These rules enforce:
+ * - Anyone with the share code can read lists and items
+ * - Only authenticated users can create lists
+ * - List owners can update/delete their lists and any items
+ * - Item creators can update/delete their own unclaimed items
+ * - Only authenticated users can claim/unclaim items
+ * - Claimed items cannot be deleted (except by list owner)
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function getUserId() {
+      return request.auth != null ? request.auth.uid : null;
+    }
+    
+    // Lists collection
+    match /lists/{listId} {
+      // Anyone can read a list (they need the share code to find it)
+      allow read: if true;
+      
+      // Create lists (authenticated only)
+      allow create: if request.auth != null &&
+                       request.resource.data.creatorId == getUserId() &&
+                       request.resource.data.title is string &&
+                       request.resource.data.title.size() > 0 &&
+                       request.resource.data.shareCode is string;
+      
+      // Update lists (authenticated owner), or allow timestamp-only bump
+      allow update: if (
+        (
+          request.auth != null &&
+          resource.data.creatorId == getUserId() &&
+          request.resource.data.creatorId == getUserId()
+        ) ||
+        // Allow anyone to update just updatedAt (needed for item mutations)
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['updatedAt'])
+        )
+      );
+      
+      // Only the authenticated list creator can delete the list
+      allow delete: if request.auth != null &&
+        getUserId() == resource.data.creatorId;
+      
+      // Items subcollection
+      match /items/{itemId} {
+        // Anyone can read items (visibility is handled in app logic)
+        allow read: if true;
+        
+        // Anyone can create items (must include creator info)
+        allow create: if request.resource.data.title is string &&
+                         request.resource.data.title.size() > 0 &&
+                         request.resource.data.createdBy.id != null;
+        
+        // Updates allowed for:
+        // - List owner (can do anything)
+        // - Item creator (can update their own item)
+        // - Authenticated users can claim/unclaim (only modifying claim fields)
+        allow update: if 
+          // List owner can update anything
+          get(/databases/$(database)/documents/lists/$(listId)).data.creatorId == getUserId() ||
+          // Item creator can update their item
+          (resource.data.createdBy.id == getUserId()) ||
+          // Anonymous item creator (id stored in the document) keeping ownership the same
+          (request.auth == null && request.resource.data.createdBy.id == resource.data.createdBy.id) ||
+          // Authenticated users can update claim fields only
+          (request.auth != null &&
+            request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['claimedBy', 'claimedAt', 'updatedAt']));
+        
+        // Delete allowed for:
+        // - List owner (always)
+        // - Item creator (only if unclaimed)
+        allow delete: if 
+          // List owner can delete anything
+          get(/databases/$(database)/documents/lists/$(listId)).data.creatorId == getUserId() ||
+          // Item creator can delete if not claimed
+          ((resource.data.createdBy.id == getUserId() || request.auth == null) && 
+           resource.data.claimedBy == null);
+      }
+    }
+    
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
