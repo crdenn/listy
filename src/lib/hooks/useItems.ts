@@ -240,12 +240,12 @@ export function useItems(
       };
     }
 
-    const isListOwner = list.creatorId === user.id || 
-      (user.anonymousId && list.creatorId === user.anonymousId);
-    const isItemCreator = item.createdBy.id === user.id || 
-      (user.anonymousId && item.createdBy.id === user.anonymousId);
-    const isClaimedByMe = item.claimedBy?.id === user.id || 
-      (user.anonymousId && item.claimedBy?.id === user.anonymousId);
+    const isListOwner = !!(list.creatorId === user.id ||
+      (user.anonymousId && list.creatorId === user.anonymousId));
+    const isItemCreator = !!(item.createdBy.id === user.id ||
+      (user.anonymousId && item.createdBy.id === user.anonymousId));
+    const isClaimedByMe = !!(item.claimedBy?.id === user.id ||
+      (user.anonymousId && item.claimedBy?.id === user.anonymousId));
     const isClaimed = !!item.claimedBy;
     const isGiftList = list.type === 'gift';
     const listOwnerGiftView = isGiftList && isListOwner && !isClaimedByMe;

@@ -12,14 +12,12 @@ import { ItemCard } from './ItemCard';
 import { AddItemForm } from './AddItemForm';
 import { useItems } from '@/lib/hooks';
 import { PackageOpen } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ItemListProps {
   list: List;
 }
 
 export function ItemList({ list }: ItemListProps) {
-  const { user } = useAuth();
   const {
     items,
     addItem,
@@ -28,10 +26,11 @@ export function ItemList({ list }: ItemListProps) {
     claimItem,
     unclaimItem,
     getItemPermissions,
-  } = useItems(list.id, user);
+  } = useItems(list);
 
-  const handleAddItem = async (data: { title: string; description?: string }) => {
-    return await addItem(data);
+  const handleAddItem = async (data: { title: string; description?: string; category?: string; price?: string; imageUrl?: string; productUrl?: string }) => {
+    const result = await addItem(data);
+    return !!result;
   };
 
   // Separate claimed and unclaimed items
