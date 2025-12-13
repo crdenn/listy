@@ -74,7 +74,7 @@ export default function HomePage() {
           Listy
         </h1>
         <p className="text-lg text-muted-foreground mb-8">
-          Create gift wishlists, potluck sign-ups, and more. Share with anyone—no account required.
+          Create and share gift wishlists, potluck sign-ups, and more with friends and family.
         </p>
         
         {/* Quick Actions */}
@@ -193,7 +193,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="text-center text-sm text-muted-foreground mt-16 pb-8">
-        <p>Sign in with Google or email to save and manage your lists anywhere.</p>
+        <p>Sign in with Google to create and manage your lists.</p>
       </footer>
     </div>
   );

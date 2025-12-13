@@ -43,7 +43,7 @@ export default function ListPage({ params }: PageProps) {
   
   const isOwner = useIsListOwner(list);
   const hideClaimsFromViewer = list?.type === 'gift' && isOwner;
-  const canAddItems = list ? (list.type === 'potluck' || isOwner) : false;
+  const canAddItems = isAuthenticated && list ? (list.type === 'potluck' || isOwner) : false;
   const authButtonRef = useRef<HTMLButtonElement>(null);
   const promptAuth = () => authButtonRef.current?.click();
   const isAuthenticated = !!user?.isAuthenticated;
