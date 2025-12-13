@@ -7,6 +7,7 @@ set -e  # Exit on error
 
 UNRAID_IP="192.168.1.166"
 UNRAID_USER="root"
+UNRAID_PORT="2222"
 UNRAID_PATH="/mnt/user/appdata"
 IMAGE_NAME="collaborative-lists"
 CONTAINER_NAME="collaborative-lists"
@@ -36,19 +37,27 @@ fi
 
 echo ""
 echo "📦 Building Docker image..."
-docker-compose build
+docker build \
+  --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="$(grep NEXT_PUBLIC_FIREBASE_API_KEY .env.docker | cut -d '=' -f2)" \
+  --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$(grep NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN .env.docker | cut -d '=' -f2)" \
+  --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="$(grep NEXT_PUBLIC_FIREBASE_PROJECT_ID .env.docker | cut -d '=' -f2)" \
+  --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="$(grep NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET .env.docker | cut -d '=' -f2)" \
+  --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="$(grep NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID .env.docker | cut -d '=' -f2)" \
+  --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="$(grep NEXT_PUBLIC_FIREBASE_APP_ID .env.docker | cut -d '=' -f2)" \
+  --build-arg NEXT_PUBLIC_APP_URL="$(grep NEXT_PUBLIC_APP_URL .env.docker | cut -d '=' -f2)" \
+  -t ${IMAGE_NAME}:latest .
 
 echo ""
 echo "💾 Saving image to file..."
 docker save ${IMAGE_NAME}:latest | gzip > ${IMAGE_NAME}.tar.gz
 
 echo ""
-echo "📤 Transferring to unRAID (${UNRAID_IP})..."
-scp ${IMAGE_NAME}.tar.gz ${UNRAID_USER}@${UNRAID_IP}:${UNRAID_PATH}/
+echo "📤 Transferring to unRAID (${UNRAID_IP}:${UNRAID_PORT})..."
+scp -P ${UNRAID_PORT} ${IMAGE_NAME}.tar.gz ${UNRAID_USER}@${UNRAID_IP}:${UNRAID_PATH}/
 
 echo ""
 echo "🚀 Deploying on unRAID..."
-ssh ${UNRAID_USER}@${UNRAID_IP} << EOF
+ssh -p ${UNRAID_PORT} ${UNRAID_USER}@${UNRAID_IP} << EOF
     echo "Stopping existing container..."
     docker stop ${CONTAINER_NAME} 2>/dev/null || true
     docker rm ${CONTAINER_NAME} 2>/dev/null || true
@@ -84,4 +93,4 @@ echo "1. Configure Cloudflare Tunnel to point listy.blk-cat.com → localhost:${
 echo "2. Add listy.blk-cat.com to Firebase authorized domains"
 echo "3. Visit https://listy.blk-cat.com to test"
 echo ""
-echo "To view logs: ssh ${UNRAID_USER}@${UNRAID_IP} 'docker logs -f ${CONTAINER_NAME}'"
+echo "To view logs: ssh -p ${UNRAID_PORT} ${UNRAID_USER}@${UNRAID_IP} 'docker logs -f ${CONTAINER_NAME}'"

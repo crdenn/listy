@@ -49,7 +49,6 @@ export default function GroupPage({ params }: PageProps) {
 
   const handleJoinToggle = () => {
     if (joined) {
-      leaveGroup(decodedGroupName);
       leaveGroup(decodedGroupCode);
       toast({ title: 'Left group', description: `You left "${displayName}".` });
     } else {
