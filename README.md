@@ -1,4 +1,4 @@
-# Collaborative Lists
+# Listy
 
 A real-time collaborative list management app for gift registries, potlucks, and event planning. Built with Next.js, Firebase, and shadcn/ui.
 

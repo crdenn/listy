@@ -1,6 +1,6 @@
 /**
- * Core type definitions for the Collaborative Lists application
- * 
+ * Core type definitions for the Listy application
+ *
  * Design decisions:
  * - Lists have two types: 'gift' (hidden claims) and 'potluck' (visible claims)
  * - Users can be anonymous (sessionId) or authenticated (Firebase UID)

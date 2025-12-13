@@ -1,5 +1,5 @@
 /**
- * Utility functions for the Collaborative Lists application
+ * Utility functions for the Listy application
  */
 
 import { type ClassValue, clsx } from 'clsx';

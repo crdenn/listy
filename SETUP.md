@@ -1,6 +1,6 @@
-# Setup Guide - Collaborative Lists
+# Setup Guide - Listy
 
-This guide covers everything you need to get the Collaborative Lists app running locally and deployed to your unRAID server behind a Cloudflare Tunnel.
+This guide covers everything you need to get Listy running locally and deployed to your unRAID server behind a Cloudflare Tunnel.
 
 ## Table of Contents
 

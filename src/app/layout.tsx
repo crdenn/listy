@@ -8,7 +8,7 @@ import { Header } from '@/components/layout';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Collaborative Lists',
+  title: 'Listy',
   description: 'Create and share gift lists, potluck sign-ups, and more with friends and family.',
   keywords: ['gift list', 'wish list', 'potluck', 'event planning', 'collaborative'],
 };

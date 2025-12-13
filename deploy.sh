@@ -14,7 +14,7 @@ CONTAINER_NAME="collaborative-lists"
 PORT="3000"
 
 echo "=========================================="
-echo "Deploying Collaborative Lists to unRAID"
+echo "Deploying Listy to unRAID"
 echo "=========================================="
 
 # Check if .env.docker exists
