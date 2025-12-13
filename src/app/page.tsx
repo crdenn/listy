@@ -2,24 +2,20 @@
 
 /**
  * Home Page
- * 
+ *
  * Landing page that allows users to:
  * - Create a new list
- * - Join an existing list via share code
- * - View recent lists (for authenticated users)
+ * - View their lists (for authenticated users)
  */
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Gift, Users, ListPlus, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateListDialog } from '@/components/list/CreateListDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { List } from '@/types';
-import { getListByShareCode } from '@/lib/firebase/firestore';
 import Link from 'next/link';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 
@@ -27,43 +23,13 @@ export default function HomePage() {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
-  
-  const [shareCode, setShareCode] = useState('');
-  const [isJoining, setIsJoining] = useState(false);
+
   const handleCreated = (list: List) => {
     toast({
       title: 'List created!',
       description: 'Your new list is ready to share.',
     });
     router.push(`/list/${list.shareCode}`);
-  };
-
-  const handleJoinList = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!shareCode.trim()) return;
-    
-    setIsJoining(true);
-    try {
-      const list = await getListByShareCode(shareCode.trim());
-      if (list) {
-        router.push(`/list/${list.shareCode}`);
-      } else {
-        toast({
-          title: 'List not found',
-          description: 'Please check the share code and try again.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsJoining(false);
-    }
   };
 
   return (
@@ -107,30 +73,6 @@ export default function HomePage() {
           )}
         </div>
       </div>
-
-      {/* Join List Section */}
-      <Card className="max-w-md mx-auto mb-12">
-        <CardHeader>
-          <CardTitle className="text-lg">Have a share code?</CardTitle>
-          <CardDescription>
-            Enter the code to join an existing list
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleJoinList} className="flex gap-2">
-            <Input
-              value={shareCode}
-              onChange={(e) => setShareCode(e.target.value)}
-              placeholder="Enter share code..."
-              disabled={isJoining}
-              className="flex-1"
-            />
-            <Button type="submit" disabled={!shareCode.trim() || isJoining}>
-              {isJoining ? 'Joining...' : 'Join'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
 
       {/* Features Section */}
       <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
