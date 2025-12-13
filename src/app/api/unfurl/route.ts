@@ -11,16 +11,24 @@ interface UnfurlResult {
   url: string;
 }
 
-function extractMeta(html: string, key: string): string | undefined {
+function extractMetaAll(html: string, key: string): string[] {
   const regex = new RegExp(
     `<meta[^>]+(?:property|name)=[\"']${key}[\"'][^>]*content=[\"']([^\"']+)[\"'][^>]*>`,
-    'i'
+    'gi'
   );
-  const match = html.match(regex);
-  return match?.[1];
+  const matches: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(html)) !== null) {
+    matches.push(m[1]);
+  }
+  return matches;
 }
 
-function extractJsonLdProduct(html: string): { price?: string; currency?: string; name?: string; description?: string; image?: string } | null {
+function extractMeta(html: string, key: string): string | undefined {
+  return extractMetaAll(html, key)[0];
+}
+
+function extractJsonLdProduct(html: string): { price?: string; currency?: string; name?: string; description?: string; image?: string | string[] } | null {
   const scriptRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let match: RegExpExecArray | null;
   while ((match = scriptRegex.exec(html)) !== null) {
@@ -84,14 +92,22 @@ export async function POST(req: Request) {
 
     const title = extractMeta(html, 'og:title') || extractMeta(html, 'title');
     const description = extractMeta(html, 'og:description') || extractMeta(html, 'description');
-    const image = extractMeta(html, 'og:image');
+    const images = [
+      ...(extractMetaAll(html, 'og:image') || []),
+      extractMeta(html, 'og:image:secure_url'),
+    ].filter(Boolean) as string[];
     const metaPrice = extractMeta(html, 'product:price:amount') || extractMeta(html, 'og:price:amount');
     const metaCurrency = extractMeta(html, 'product:price:currency') || extractMeta(html, 'og:price:currency');
 
     const product = extractJsonLdProduct(html);
 
-    const rawImage = product?.image || image;
-    const sanitizedImage = rawImage && /logo|favicon/i.test(rawImage) && product?.image ? product.image : rawImage;
+    const productImages = product?.image
+      ? Array.isArray(product.image)
+        ? product.image
+        : [product.image]
+      : [];
+    const candidateImages = [...productImages, ...images];
+    const sanitizedImage = candidateImages.find((src) => src && !/logo|favicon/i.test(src));
 
     const result: UnfurlResult = {
       url: parsed.toString(),
