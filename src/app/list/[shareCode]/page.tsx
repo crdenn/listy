@@ -40,13 +40,13 @@ export default function ListPage({ params }: PageProps) {
     getItemPermissions,
     isAdding 
   } = useItems(list);
-  
+
+  const isAuthenticated = !!user?.isAuthenticated;
   const isOwner = useIsListOwner(list);
   const hideClaimsFromViewer = list?.type === 'gift' && isOwner;
   const canAddItems = isAuthenticated && list ? (list.type === 'potluck' || isOwner) : false;
   const authButtonRef = useRef<HTMLButtonElement>(null);
   const promptAuth = () => authButtonRef.current?.click();
-  const isAuthenticated = !!user?.isAuthenticated;
 
   // Show loading state
   if (authLoading || listLoading) {

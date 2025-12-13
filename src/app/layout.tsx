@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 /**
  * Root Layout
- * 
+ *
  * Wraps the entire application with necessary providers:
  * - AuthProvider: Manages user authentication state
  * - Toaster: Shows toast notifications
