@@ -79,7 +79,45 @@ function normalizePrice(raw?: string | number): number | undefined {
   return Number.isFinite(num) ? num : undefined;
 }
 
+function extractAmazonBuyBoxPrice(html: string): number | undefined {
+  // Amazon-specific buy box price extraction patterns
+
+  // Pattern 1: a-offscreen in buy box (most reliable)
+  const offscreenMatch = html.match(/<span[^>]*class="[^"]*a-offscreen[^"]*"[^>]*>\$?([0-9,]+\.?[0-9]*)<\/span>/i);
+  if (offscreenMatch) {
+    const price = Number(offscreenMatch[1].replace(/,/g, ''));
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+
+  // Pattern 2: corePriceDisplay or priceToPay data attributes
+  const coreMatch = html.match(/"corePriceDisplay"\s*:\s*{\s*"price"\s*:\s*"?\$?([0-9,]+\.?[0-9]*)"/i);
+  if (coreMatch) {
+    const price = Number(coreMatch[1].replace(/,/g, ''));
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+
+  // Pattern 3: apex_desktop price
+  const apexMatch = html.match(/"apex_desktop"\s*:\s*"?\$?([0-9,]+\.?[0-9]*)"/i);
+  if (apexMatch) {
+    const price = Number(apexMatch[1].replace(/,/g, ''));
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+
+  // Pattern 4: buyingPrice in JavaScript
+  const buyingPriceMatch = html.match(/buyingPrice["\s:]+\$?([0-9,]+\.?[0-9]*)/i);
+  if (buyingPriceMatch) {
+    const price = Number(buyingPriceMatch[1].replace(/,/g, ''));
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+
+  return undefined;
+}
+
 function regexFindPrice(html: string): number | undefined {
+  // Try Amazon-specific extraction first
+  const amazonPrice = extractAmazonBuyBoxPrice(html);
+  if (amazonPrice) return amazonPrice;
+
   // Try to find prices in common ecommerce patterns, preferring actual price over list price
   const prices: { value: number; context: string; index: number }[] = [];
 
@@ -99,7 +137,7 @@ function regexFindPrice(html: string): number | undefined {
   }
 
   // Look for JSON price fields
-  const jsonPriceRegex = /"(?:price|lowPrice)"\s*:\s*"?([0-9.,]+)"?/gi;
+  const jsonPriceRegex = /"(?:price|lowPrice|buyingPrice)"\s*:\s*"?([0-9.,]+)"?/gi;
   while ((m = jsonPriceRegex.exec(html)) !== null) {
     const num = Number(m[1].replace(/,/g, ''));
     if (Number.isFinite(num) && num > 0) {
@@ -119,7 +157,8 @@ function regexFindPrice(html: string): number | undefined {
                        p.context.includes('msrp') ||
                        p.context.includes('was') ||
                        p.context.includes('original') ||
-                       p.context.includes('typical');
+                       p.context.includes('typical') ||
+                       p.context.includes('strikethrough');
     return !isListPrice;
   });
 
@@ -133,6 +172,13 @@ function regexFindPrice(html: string): number | undefined {
 
     // Prefer prices earlier in the document
     score += (1 - (p.index / html.length)) * 10;
+
+    // Boost if context suggests it's a buy box or current price
+    if (p.context.includes('buybox') ||
+        p.context.includes('buying') ||
+        p.context.includes('apex')) {
+      score += 30;
+    }
 
     // Boost if context suggests it's a sale/current price
     if (p.context.includes('sale') ||
@@ -195,10 +241,22 @@ export async function extractFromHtml(url: string): Promise<{ preview: ProductPr
     meta['description'] ||
     productLd?.description;
 
-  const rawImage =
+  // Extract image with fallbacks
+  let rawImage =
     meta['og:image'] ||
     meta['twitter:image'] ||
     (Array.isArray(productLd?.image) ? productLd?.image[0] : productLd?.image);
+
+  // Amazon-specific: Look for main product image in HTML if meta tags don't have it
+  if (!rawImage && html.includes('amazon.com')) {
+    const imgMatch = html.match(/"hiRes":"([^"]+)"/i) ||
+                    html.match(/"large":"([^"]+)"/i) ||
+                    html.match(/data-old-hires="([^"]+)"/i) ||
+                    html.match(/id="landingImage"[^>]+src="([^"]+)"/i);
+    if (imgMatch) {
+      rawImage = imgMatch[1];
+    }
+  }
 
   const offers = productLd?.offers;
   const firstOffer = Array.isArray(offers) ? offers[0] : offers;
