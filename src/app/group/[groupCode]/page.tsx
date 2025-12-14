@@ -9,9 +9,8 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Tag, Loader2, Share2, ArrowLeft, Check, X } from 'lucide-react';
+import { Tag, Loader2, Share2, ArrowLeft } from 'lucide-react';
 import { useGroupLists } from '@/lib/hooks/useList';
-import { useGroupMembership } from '@/lib/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import { ListCard } from '@/components/list/ListCard';
 import { Button } from '@/components/ui/button';
@@ -24,12 +23,10 @@ interface PageProps {
 export default function GroupPage({ params }: PageProps) {
   const { groupCode } = use(params);
   const decodedGroupCode = decodeURIComponent(groupCode);
-  const { lists, isLoading, error, refresh } = useGroupLists(decodedGroupCode);
+  const { lists, isLoading, error } = useGroupLists(decodedGroupCode);
   const { toast } = useToast();
   const [shareUrl, setShareUrl] = useState('');
   const { user } = useAuth();
-  const { joinGroup, leaveGroup, isMember } = useGroupMembership();
-  const joined = isMember(decodedGroupCode);
   const displayName = lists[0]?.groupName || 'Group';
 
   useEffect(() => {
@@ -47,23 +44,13 @@ export default function GroupPage({ params }: PageProps) {
     }
   };
 
-  const handleJoinToggle = () => {
-    if (joined) {
-      leaveGroup(decodedGroupCode);
-      toast({ title: 'Left group', description: `You left "${displayName}".` });
-    } else {
-      joinGroup({ code: decodedGroupCode, name: displayName });
-      toast({ title: 'Joined group', description: `You joined "${displayName}".` });
-    }
-  };
-
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3">
         {user?.isAuthenticated && (
           <Link
-            href="/my-lists"
+            href="/"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -82,30 +69,16 @@ export default function GroupPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-            <Button variant="outline" size="sm" onClick={refresh} className="whitespace-nowrap">
-              Refresh
-            </Button>
-            <Button
-              variant={joined ? 'secondary' : 'default'}
-              size="sm"
-              className="gap-2 whitespace-nowrap"
-              onClick={handleJoinToggle}
-            >
-              {joined ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-              {joined ? 'Leave group' : 'Join group'}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 whitespace-nowrap"
-              onClick={handleCopyLink}
-              disabled={!shareUrl}
-            >
-              <Share2 className="h-4 w-4" />
-              Copy group link
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 whitespace-nowrap"
+            onClick={handleCopyLink}
+            disabled={!shareUrl}
+          >
+            <Share2 className="h-4 w-4" />
+            Share group
+          </Button>
         </div>
       </div>
 
@@ -118,7 +91,7 @@ export default function GroupPage({ params }: PageProps) {
         <div className="text-center py-12 space-y-2">
           <p className="text-lg font-semibold">Unable to load group</p>
           <p className="text-muted-foreground">{error}</p>
-          <Button variant="outline" size="sm" onClick={refresh}>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             Try again
           </Button>
         </div>
@@ -132,8 +105,8 @@ export default function GroupPage({ params }: PageProps) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {lists.map((list) => (
-            <div className="w-full">
-              <ListCard key={list.id} list={list} />
+            <div key={list.id} className="w-full">
+              <ListCard list={list} />
             </div>
           ))}
         </div>
