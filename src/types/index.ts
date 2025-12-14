@@ -230,6 +230,16 @@ export interface ListItem {
   updatedAt: Timestamp;
 }
 
+/**
+ * List reference saved under a user for quick access
+ */
+export interface SavedListRef {
+  listId: string;
+  shareCode: string;
+  title: string;
+  lastOpenedAt: Timestamp;
+}
+
 // ============================================
 // Firebase Helper Types
 // ============================================

@@ -17,6 +17,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import Link from 'next/link';
 import { useGroupMembership } from '@/lib/hooks';
+import { useSharedLists } from '@/lib/hooks';
 
 export default function MyListsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -24,6 +25,7 @@ export default function MyListsPage() {
   const { deleteList } = useDeleteList();
   const { toast } = useToast();
   const { groups: joinedGroups } = useGroupMembership();
+  const { sharedLists, isLoading: sharedLoading, refresh: refreshShared } = useSharedLists();
 
   // Handle list deletion with refresh
   const handleDelete = async (listId: string) => {
@@ -34,6 +36,7 @@ export default function MyListsPage() {
         description: 'Your list has been permanently deleted.',
       });
       refresh();
+      refreshShared();
     } else {
       toast({
         title: 'Error',
@@ -130,6 +133,41 @@ export default function MyListsPage() {
           ))}
         </div>
       )}
+
+      {/* Shared with me */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Tag className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Shared with me</h2>
+        </div>
+        {sharedLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : sharedLists.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Lists you open via a share link will appear here for quick access.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {sharedLists.map((shared) => (
+              <Link
+                key={shared.listId}
+                href={`/list/${shared.shareCode}`}
+                className="flex items-center justify-between rounded-md border px-3 py-3 hover:bg-muted transition-colors"
+              >
+                <div className="space-y-1">
+                  <p className="font-semibold">{shared.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Share code: {shared.shareCode}
+                  </p>
+                </div>
+                <Tag className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Group memberships */}
       <div className="space-y-3">

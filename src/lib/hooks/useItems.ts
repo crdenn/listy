@@ -17,6 +17,7 @@ import {
   claimItem,
   unclaimItem,
   subscribeToItems,
+  saveListForUser,
 } from '@/lib/firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -102,6 +103,14 @@ export function useItems(
       fetchItems();
     }
   }, [listId, realtime, fetchItems]);
+
+  // Save list to user's "shared" references when viewing
+  useEffect(() => {
+    if (!list || !user?.isAuthenticated) return;
+    saveListForUser(user.id, list).catch((err) => {
+      console.error('Failed to save list ref', err);
+    });
+  }, [list, user]);
 
   // Add item
   const add = useCallback(async (input: { title: string; description?: string; category?: string; price?: string; imageUrl?: string; productUrl?: string }): Promise<ListItem | null> => {

@@ -29,11 +29,12 @@ import {
   QueryConstraint,
 } from 'firebase/firestore';
 import { firebaseDb } from './config';
-import { List, CreateListInput, ListItem, UserIdentity, UserSession } from '@/types';
+import { List, CreateListInput, ListItem, UserIdentity, UserSession, SavedListRef } from '@/types';
 import { createShareCode, createGroupCode } from '@/lib/utils';
 
 // Collection references
 const listsCollection = collection(firebaseDb, 'lists');
+const userSavedLists = (userId: string) => collection(firebaseDb, 'users', userId, 'savedLists');
 
 /**
  * Get the items subcollection reference for a list
@@ -196,6 +197,29 @@ export async function deleteList(listId: string): Promise<void> {
   batch.delete(doc(listsCollection, listId));
   
   await batch.commit();
+}
+
+/**
+ * Save a list reference under a user (for "shared with me"/recent lists)
+ */
+export async function saveListForUser(userId: string, list: List): Promise<void> {
+  const ref = doc(userSavedLists(userId), list.id);
+  const data: SavedListRef = {
+    listId: list.id,
+    shareCode: list.shareCode,
+    title: list.title,
+    lastOpenedAt: Timestamp.now(),
+  };
+  await setDoc(ref, data);
+}
+
+/**
+ * Get saved/shared lists for a user, sorted by last opened
+ */
+export async function getSavedListsForUser(userId: string): Promise<SavedListRef[]> {
+  const q = query(userSavedLists(userId), orderBy('lastOpenedAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => doc.data() as SavedListRef);
 }
 
 /**
