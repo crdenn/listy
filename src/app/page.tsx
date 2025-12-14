@@ -177,7 +177,7 @@ export default function HomePage() {
                   size="sm"
                   onClick={() => setShowPastEvents((prev) => !prev)}
                 >
-                  {showPastEvents ? 'Hide past events' : 'Show past events'}
+                  {showPastEvents ? 'Hide past event lists' : 'Show past event lists'}
                 </Button>
               </div>
             )}
