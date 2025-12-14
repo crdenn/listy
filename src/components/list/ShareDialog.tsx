@@ -50,7 +50,10 @@ export function ShareDialog({ shareCode, listTitle, children }: ShareDialogProps
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Share "{listTitle}"</DialogTitle>
           <DialogDescription>

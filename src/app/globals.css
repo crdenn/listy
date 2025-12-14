@@ -11,33 +11,33 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 46 100% 97%;
     --foreground: 222.2 84% 4.9%;
     
-    --card: 0 0% 100%;
+    --card: 46 100% 97%;
     --card-foreground: 222.2 84% 4.9%;
     
-    --popover: 0 0% 100%;
+    --popover: 46 100% 97%;
     --popover-foreground: 222.2 84% 4.9%;
     
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 202 77% 18%;
     --primary-foreground: 210 40% 98%;
     
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 200 30% 92%;
+    --secondary-foreground: 202 77% 18%;
     
-    --muted: 210 40% 96.1%;
+    --muted: 200 25% 90%;
     --muted-foreground: 215.4 16.3% 46.9%;
     
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 200 30% 92%;
+    --accent-foreground: 202 77% 18%;
     
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 353 63% 54%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 200 25% 85%;
+    --input: 200 25% 85%;
+    --ring: 202 77% 18%;
     
     --radius: 0.5rem;
     
@@ -114,6 +114,6 @@
 /* Focus visible styles for accessibility */
 @layer base {
   *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-primary ring-offset-0;
   }
 }

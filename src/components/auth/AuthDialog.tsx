@@ -103,7 +103,10 @@ export function AuthDialog({ trigger, onComplete }: AuthDialogProps) {
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent
+        className="sm:max-w-[440px]"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>
             {mode === 'signin' ? 'Sign in' : 'Create an account'}
@@ -116,25 +119,24 @@ export function AuthDialog({ trigger, onComplete }: AuthDialogProps) {
         </DialogHeader>
 
         <div className="space-y-4">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full justify-center gap-2"
-            onClick={handleGoogleSignIn}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                <LogIn className="h-4 w-4" />
-                Continue with Google
-              </>
-            )}
-          </Button>
+        <Button
+          type="button"
+          className="w-full justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={handleGoogleSignIn}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            <>
+              <LogIn className="h-4 w-4" />
+              Continue with Google
+            </>
+          )}
+        </Button>
 
           <div className="relative">
             <Separator />

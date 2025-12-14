@@ -10,18 +10,22 @@
 import Link from 'next/link';
 import { ListTodo } from 'lucide-react';
 import { UserMenu } from './UserMenu';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Header() {
+  const { user } = useAuth();
+  const homeHref = user?.isAuthenticated ? '/my-lists' : '/';
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground shadow-sm">
       <div className="container flex h-14 items-center justify-between px-4 mx-auto max-w-4xl">
         <Link
-          href="/"
-          className="flex items-center gap-2 font-semibold text-lg hover:opacity-80 transition-opacity"
+          href={homeHref}
+          className="flex items-center gap-2 font-semibold text-lg hover:opacity-90 transition-opacity"
         >
-          <ListTodo className="h-6 w-6 text-primary" />
-          <span className="hidden sm:inline">Listy</span>
-          <span className="sm:hidden">Lists</span>
+          <ListTodo className="h-6 w-6 text-primary-foreground" />
+          <span className="hidden sm:inline text-primary-foreground">Listy</span>
+          <span className="sm:hidden text-primary-foreground">Lists</span>
         </Link>
         
         <UserMenu />

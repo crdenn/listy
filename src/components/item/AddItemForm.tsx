@@ -238,37 +238,31 @@ export function AddItemForm({ onAdd, disabled = false, showCategory = false, sho
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              Press Escape to cancel, ⌘+Enter to submit
-            </p>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!title.trim() || isSubmitting}
-                className="gap-1"
-              >
-                {isSubmitting ? (
-                  'Adding...'
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    Add Item
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!title.trim() || isSubmitting}
+              className="gap-1"
+            >
+              {isSubmitting ? (
+                'Adding...'
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Add Item
+                </>
+              )}
+            </Button>
           </div>
         </form>
       </CardContent>

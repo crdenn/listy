@@ -45,7 +45,7 @@ export function UserMenu() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 border-primary text-primary bg-background hover:bg-background"
           >
             <LogIn className="h-4 w-4" />
             <span className="hidden sm:inline">

@@ -136,7 +136,10 @@ export function CreateListDialog({ trigger, children, onCreated, onSuccess }: Cr
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger ?? children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent
+        className="sm:max-w-[480px]"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Create a new list</DialogTitle>

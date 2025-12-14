@@ -283,7 +283,7 @@ export function ItemCard({
 
       {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
