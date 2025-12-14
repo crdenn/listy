@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { firebaseAuth } from '@/lib/firebase/config';
 
 interface AddItemFormProps {
   onAdd: (data: { title: string; description?: string; category?: string; price?: string; imageUrl?: string; productUrl?: string }) => Promise<boolean>;
@@ -23,6 +25,7 @@ interface AddItemFormProps {
 }
 
 export function AddItemForm({ onAdd, disabled = false, showCategory = false, showGiftFields = false }: AddItemFormProps) {
+  const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -83,16 +86,28 @@ export function AddItemForm({ onAdd, disabled = false, showCategory = false, sho
 
   const handleUnfurl = async () => {
     if (!productUrl.trim()) return;
+    if (!user?.isAuthenticated) {
+      setUnfurlError('Sign in to fetch product details.');
+      return;
+    }
     setIsUnfurling(true);
     setUnfurlError(null);
     try {
-      const res = await fetch('/api/unfurl', {
+      const token = await firebaseAuth.currentUser?.getIdToken();
+      if (!token) {
+        setUnfurlError('Unable to verify your session. Please sign in again.');
+        return;
+      }
+
+      const res = await fetch('/api/products/ingest', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ url: productUrl.trim() }),
       });
 
-      // Check if response is JSON
       const contentType = res.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         setUnfurlError('Unable to fetch link - invalid response');
@@ -104,12 +119,13 @@ export function AddItemForm({ onAdd, disabled = false, showCategory = false, sho
         setUnfurlError(data.error || 'Unable to fetch link');
         return;
       }
+
       if (data.title && !title) setTitle(data.title);
       if (data.description && !description) setDescription(data.description);
-      if (data.price) setPrice(data.price);
+      if (data.price !== undefined) setPrice(String(data.price));
       if (data.image) setImageUrl(data.image);
     } catch (err) {
-      console.error('Unfurl error', err);
+      console.error('Ingest error', err);
       setUnfurlError('Unable to fetch link');
     } finally {
       setIsUnfurling(false);

@@ -92,10 +92,14 @@ function needsBetterData(preview: ProductPreview, threshold: number) {
 }
 
 export async function POST(req: NextRequest) {
+  console.log('🚀 [Product Ingest] POST handler called');
+
   let userId: string | null = null;
   try {
     userId = await verifyAuth(req);
+    console.log('[Product Ingest] Auth verified for user:', userId);
   } catch (err: any) {
+    console.error('[Product Ingest] Auth failed:', err.message);
     if (err.message === 'missing_token' || err.message === 'invalid_token') {
       return buildError(401, 'Unauthorized');
     }
@@ -133,34 +137,45 @@ export async function POST(req: NextRequest) {
   }
 
   // Cache
+  console.log('[Product Ingest] Checking cache for hash:', hash);
   const cached = await getCachedPreview(hash);
   if (cached) {
+    console.log('[Product Ingest] Returning cached result:', { title: cached.title, price: cached.price });
     return NextResponse.json(cached);
   }
+  console.log('[Product Ingest] No cache hit, will fetch fresh data');
 
   // Stage 1: HTML
+  console.log('[Product Ingest] Stage 1: Extracting from HTML...');
   let { preview } = await extractFromHtml(normalizedUrl);
   preview = scorePreview(preview);
+  console.log('[Product Ingest] Stage 1 result:', { title: preview.title, price: preview.price, confidence: preview.confidence });
 
   // Stage 2: Diffbot if needed
   if (needsBetterData(preview, 0.75)) {
+    console.log('[Product Ingest] Stage 2: Trying Diffbot (confidence too low)...');
     const diffbot = await extractFromDiffbot(normalizedUrl);
     preview = scorePreview(mergePreviews(preview, diffbot.preview));
+    console.log('[Product Ingest] Stage 2 result:', { title: preview.title, price: preview.price, confidence: preview.confidence });
   }
 
   // Stage 3: Bright Data for Amazon/Walmart when key fields missing/low confidence
   if (hostname.includes('amazon.') || hostname.includes('walmart.')) {
     if (needsBetterData(preview, 0.95)) {
+      console.log('[Product Ingest] Stage 3: Trying Bright Data (still needs better data)...');
       const bright = await extractFromBrightData(normalizedUrl, hostname);
       preview = scorePreview(mergePreviews(preview, bright.preview));
+      console.log('[Product Ingest] Stage 3 result:', { title: preview.title, price: preview.price, confidence: preview.confidence });
     }
   }
 
   // Finalize and cache
   if (!preview.title && !preview.image && preview.price === undefined) {
+    console.error('[Product Ingest] Failed to extract any data');
     return buildError(500, 'Unable to retrieve product data');
   }
 
+  console.log('[Product Ingest] Final result:', { title: preview.title, price: preview.price, image: preview.image, confidence: preview.confidence });
   await cachePreview(hash, normalizedUrl, preview);
 
   return NextResponse.json(preview);

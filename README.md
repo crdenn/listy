@@ -130,6 +130,25 @@ NEXT_PUBLIC_APP_URL=
 
 See [.env.local.example](./.env.local.example) for details.
 
+## Product link ingestion (HTML → Diffbot → Bright Data)
+
+The `/api/products/ingest` endpoint returns a normalized product preview (title, description, price, image) for a given URL using a 3-stage pipeline:
+1) HTML metadata + JSON-LD (default, cheapest)
+2) Diffbot Analyze (fallback if data is incomplete)
+3) Bright Data dataset (Amazon/Walmart-only fallback if still incomplete)
+
+It caches results in Firestore for 30 days and rate-limits users (30 requests/hour).
+
+Setup:
+- Add to `.env.local` (and production env):
+  - `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY`
+  - `DIFFBOT_TOKEN` (optional but recommended)
+  - `BRIGHTDATA_API_KEY` (optional but recommended)
+  - `BRIGHTDATA_AMAZON_DATASET_ID=gd_l7q7dkf244hwjntr0`
+  - `BRIGHTDATA_WALMART_DATASET_ID=gd_l95fol7l1ru6rlo116`
+- Install deps: `npm install` (adds `firebase-admin`).
+- Auth: clients must send `Authorization: Bearer <firebase_id_token>`; tokens are verified server-side with Firebase Admin.
+
 ## Security
 
 - Firebase Security Rules enforce permissions server-side

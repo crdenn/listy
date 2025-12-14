@@ -68,6 +68,7 @@ echo "Starting new container..."
 docker run -d \
   --name ${CONTAINER_NAME} \
   --restart unless-stopped \
+  --env-file .env.docker \
   -p ${PORT}:${PORT} \
   ${IMAGE_NAME}:latest
 
