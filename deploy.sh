@@ -52,34 +52,32 @@ echo "💾 Saving image to file..."
 docker save ${IMAGE_NAME}:latest | gzip > ${IMAGE_NAME}.tar.gz
 
 echo ""
-echo "📤 Transferring to unRAID (${UNRAID_IP}:${UNRAID_PORT})..."
-scp -P ${UNRAID_PORT} ${IMAGE_NAME}.tar.gz ${UNRAID_USER}@${UNRAID_IP}:${UNRAID_PATH}/
+echo "📤 Transferring image locally to ${UNRAID_PATH}..."
+cp ${IMAGE_NAME}.tar.gz ${UNRAID_PATH}/
 
 echo ""
-echo "🚀 Deploying on unRAID..."
-ssh -p ${UNRAID_PORT} ${UNRAID_USER}@${UNRAID_IP} << EOF
-    echo "Stopping existing container..."
-    docker stop ${CONTAINER_NAME} 2>/dev/null || true
-    docker rm ${CONTAINER_NAME} 2>/dev/null || true
+echo "🚀 Deploying locally on unRAID..."
+echo "Stopping existing container..."
+docker stop ${CONTAINER_NAME} 2>/dev/null || true
+docker rm ${CONTAINER_NAME} 2>/dev/null || true
 
-    echo "Loading new image..."
-    docker load < ${UNRAID_PATH}/${IMAGE_NAME}.tar.gz
+echo "Loading new image..."
+docker load < ${UNRAID_PATH}/${IMAGE_NAME}.tar.gz
 
-    echo "Starting new container..."
-    docker run -d \
-      --name ${CONTAINER_NAME} \
-      --restart unless-stopped \
-      -p ${PORT}:${PORT} \
-      ${IMAGE_NAME}:latest
+echo "Starting new container..."
+docker run -d \
+  --name ${CONTAINER_NAME} \
+  --restart unless-stopped \
+  -p ${PORT}:${PORT} \
+  ${IMAGE_NAME}:latest
 
-    echo ""
-    echo "Container status:"
-    docker ps | grep ${CONTAINER_NAME}
+echo ""
+echo "Container status:"
+docker ps | grep ${CONTAINER_NAME}
 
-    echo ""
-    echo "Cleaning up image file..."
-    rm ${UNRAID_PATH}/${IMAGE_NAME}.tar.gz
-EOF
+echo ""
+echo "Cleaning up image file..."
+rm ${UNRAID_PATH}/${IMAGE_NAME}.tar.gz
 
 echo ""
 echo "🧹 Cleaning up local image file..."
