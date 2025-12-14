@@ -77,7 +77,7 @@ export function ListHeader({ list, isOwner }: ListHeaderProps) {
   const handleDelete = async () => {
     const success = await deleteList(list.id);
     if (success) {
-      router.push('/my-lists');
+      router.push('/');
     }
   };
 
@@ -88,7 +88,7 @@ export function ListHeader({ list, isOwner }: ListHeaderProps) {
     : list.groupName
       ? `/group/${encodeURIComponent(list.groupName)}`
       : null;
-  const backHref = !user?.isAuthenticated && groupHref ? groupHref : '/my-lists';
+  const backHref = !user?.isAuthenticated && groupHref ? groupHref : '/';
   const backLabel = !user?.isAuthenticated && groupHref ? 'Back to group' : 'My Lists';
   const eventDateLabel = list.eventDate ? formatDateInput(list.eventDate) : null;
   const eventTimeLabel = list.eventTime ? formatTimeInput(list.eventTime) : null;

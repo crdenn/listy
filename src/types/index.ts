@@ -237,6 +237,7 @@ export interface SavedListRef {
   listId: string;
   shareCode: string;
   title: string;
+  creatorId?: string;
   lastOpenedAt: Timestamp;
 }
 
@@ -246,6 +247,7 @@ export interface SavedListRef {
 export interface ListMember {
   id: string;
   displayName: string | null;
+  photoURL?: string;
   joinedAt: Timestamp;
   lastActiveAt: Timestamp;
 }

@@ -21,7 +21,8 @@ export function useSharedLists() {
     setError(null);
     try {
       const data = await getSavedListsForUser(user.id);
-      setLists(data);
+      const filtered = data.filter((l) => l.creatorId ? l.creatorId !== user.id : true);
+      setLists(filtered);
     } catch (err) {
       console.error('Error fetching shared lists', err);
       setError('Failed to load shared lists');

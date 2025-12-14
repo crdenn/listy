@@ -8,7 +8,7 @@
  * - My Lists page for authenticated users (at root URL)
  */
 
-import { Gift, Users, ListPlus, Loader2, Plus, Tag } from 'lucide-react';
+import { Gift, Users, ListPlus, Loader2, Plus, Tag, Share2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,14 +17,16 @@ import { useMyLists, useDeleteList } from '@/lib/hooks/useList';
 import { useToast } from '@/components/ui/use-toast';
 import { ListCard } from '@/components/list/ListCard';
 import { CreateListDialog } from '@/components/list/CreateListDialog';
-import { useGroupMembership } from '@/lib/hooks';
+import { useGroupMembership, useSharedLists } from '@/lib/hooks';
 import Link from 'next/link';
+import { formatRelativeTime } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
   const { lists, isLoading: listsLoading, refresh } = useMyLists();
+  const { sharedLists, isLoading: sharedLoading, refresh: refreshShared } = useSharedLists();
   const { deleteList } = useDeleteList();
   const { toast } = useToast();
   const { groups: joinedGroups } = useGroupMembership();
@@ -38,6 +40,7 @@ export default function HomePage() {
         description: 'Your list has been permanently deleted.',
       });
       refresh();
+      refreshShared();
     } else {
       toast({
         title: 'Error',
@@ -167,6 +170,49 @@ export default function HomePage() {
               </div>
             );
           })()}
+        </div>
+
+        {/* Shared with me */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Share2 className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Shared with me</h2>
+          </div>
+          {sharedLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : sharedLists.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Lists that others share with you will appear here.
+            </p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {sharedLists
+                .filter((shared) => !lists.find((l) => l.id === shared.listId))
+                .map((shared) => (
+                <Link
+                  key={shared.listId}
+                  href={`/list/${shared.shareCode}`}
+                  className="rounded-lg border px-4 py-3 hover:shadow-md transition-shadow bg-white"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <p className="font-semibold line-clamp-1">{shared.title}</p>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        Viewed {formatRelativeTime(shared.lastOpenedAt instanceof Date ? shared.lastOpenedAt : shared.lastOpenedAt.toDate())}
+                      </p>
+                    </div>
+                    <Share2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Open shared list
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );

@@ -14,7 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export function Header() {
   const { user } = useAuth();
-  const homeHref = user?.isAuthenticated ? '/my-lists' : '/';
+  // Authenticated users still land on the root URL, which renders My Lists
+  const homeHref = '/';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground shadow-sm">

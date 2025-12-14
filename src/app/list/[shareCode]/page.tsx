@@ -19,7 +19,8 @@ import { AddItemForm } from '@/components/item/AddItemForm';
 import { Loader2, PackageOpen } from 'lucide-react';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Crown } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ shareCode: string }>;
@@ -50,6 +51,15 @@ export default function ListPage({ params }: PageProps) {
   const authButtonRef = useRef<HTMLButtonElement>(null);
   const promptAuth = () => authButtonRef.current?.click();
   const { members, isLoading: membersLoading } = useListMembers(list);
+  const collaborators = members.filter((m) => m.id !== list?.creatorId);
+  const creatorName = list?.creatorName || 'List owner';
+  const creatorInitials = creatorName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  const creatorAvatar = members.find((m) => m.id === list?.creatorId);
 
   // Show loading state
   if (authLoading || listLoading) {
@@ -106,26 +116,39 @@ export default function ListPage({ params }: PageProps) {
       {/* List header with title, description, and actions */}
       <ListHeader list={list} isOwner={isOwner} />
 
-      {/* People with access */}
+      {/* Creator + people with access */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">People with access</h2>
-          {!membersLoading && (
-            <span className="text-xs text-muted-foreground">({members.length})</span>
-          )}
+          <h2 className="text-lg font-semibold">People</h2>
         </div>
-        {membersLoading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading collaborators...</span>
+
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-3 rounded-md border bg-white/60 px-3 py-2 shadow-sm">
+            <Avatar className="h-10 w-10 border border-primary/20 bg-primary/5 text-primary ring-2 ring-primary/60">
+              {creatorAvatar?.photoURL && (
+                <AvatarImage src={creatorAvatar.photoURL} alt={creatorName} />
+              )}
+              <AvatarFallback>{creatorInitials || '??'}</AvatarFallback>
+            </Avatar>
+            <div className="text-sm flex items-center gap-2">
+              <p className="font-semibold leading-none">
+                {creatorName}
+              </p>
+              <Crown className="h-4 w-4 text-primary" aria-label="List creator" />
+            </div>
           </div>
-        ) : members.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Only you so far. Invite others to collaborate to see them here.
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            {members.map((member) => {
+
+          {membersLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading collaborators...</span>
+            </div>
+          ) : collaborators.length === 0 ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>No other collaborators yet.</span>
+            </div>
+          ) : (
+            collaborators.map((member) => {
               const initials = member.displayName?.trim().slice(0, 2).toUpperCase() || '?';
               return (
                 <div
@@ -133,19 +156,21 @@ export default function ListPage({ params }: PageProps) {
                   className="flex items-center gap-3 rounded-md border bg-white/60 px-3 py-2 shadow-sm"
                 >
                   <Avatar className="h-9 w-9 border border-primary/20 bg-primary/5 text-primary">
+                    {member.photoURL && (
+                      <AvatarImage src={member.photoURL} alt={member.displayName || 'Collaborator'} />
+                    )}
                     <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
                   <div className="text-sm">
                     <p className="font-medium leading-none">
                       {member.displayName || 'Collaborator'}
                     </p>
-                    <p className="text-xs text-muted-foreground">Has access</p>
                   </div>
                 </div>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
       </section>
 
       {/* Add item form (hidden from non-owners on gift lists) */}

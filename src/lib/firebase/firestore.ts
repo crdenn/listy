@@ -209,6 +209,7 @@ export async function saveListForUser(userId: string, list: List): Promise<void>
     listId: list.id,
     shareCode: list.shareCode,
     title: list.title,
+    creatorId: list.creatorId,
     lastOpenedAt: Timestamp.now(),
   };
   await setDoc(ref, data);
@@ -295,6 +296,7 @@ export async function touchListMember(listId: string, user: UserSession): Promis
   const existing = snapshot.exists() ? snapshot.data() : null;
   const data = {
     displayName: user.displayName,
+    photoURL: user.photoURL || existing?.photoURL || null,
     joinedAt: existing?.joinedAt ?? serverTimestamp(),
     lastActiveAt: serverTimestamp(),
   };

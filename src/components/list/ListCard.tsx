@@ -68,12 +68,12 @@ export function ListCard({ list, onDelete }: ListCardProps) {
 
   return (
     <>
-      <Card className="group relative hover:shadow-md transition-shadow">
+      <Card className="group relative bg-white border border-border shadow-none rounded-lg">
         <Link href={`/list/${list.shareCode}`} className="absolute inset-0 z-0" />
         
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pt-3 pb-2">
           <div className="space-y-1 pr-8">
-            <CardTitle className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+            <CardTitle className="text-base font-semibold line-clamp-1 group-hover:text-primary transition-colors">
               {list.title}
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -148,13 +148,14 @@ export function ListCard({ list, onDelete }: ListCardProps) {
           </div>
         </CardHeader>
 
-        {list.description && (
-          <CardContent>
+        <CardContent className={cn('pt-0 px-4', list.description ? 'pb-3' : 'pb-3')}>
+          {list.description && (
             <p className="text-sm text-muted-foreground line-clamp-2">
               {list.description}
             </p>
-          </CardContent>
-        )}
+          )}
+          {!list.description && <div className="h-2" aria-hidden="true" />}
+        </CardContent>
       </Card>
 
       {/* Delete Confirmation Dialog */}
