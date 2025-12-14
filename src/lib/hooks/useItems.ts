@@ -18,6 +18,7 @@ import {
   unclaimItem,
   subscribeToItems,
   saveListForUser,
+  touchListMember,
 } from '@/lib/firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -109,6 +110,9 @@ export function useItems(
     if (!list || !user?.isAuthenticated) return;
     saveListForUser(user.id, list).catch((err) => {
       console.error('Failed to save list ref', err);
+    });
+    touchListMember(list.id, user).catch((err) => {
+      console.error('Failed to record membership', err);
     });
   }, [list, user]);
 

@@ -29,12 +29,13 @@ import {
   QueryConstraint,
 } from 'firebase/firestore';
 import { firebaseDb } from './config';
-import { List, CreateListInput, ListItem, UserIdentity, UserSession, SavedListRef } from '@/types';
+import { List, CreateListInput, ListItem, UserIdentity, UserSession, SavedListRef, ListMember } from '@/types';
 import { createShareCode, createGroupCode } from '@/lib/utils';
 
 // Collection references
 const listsCollection = collection(firebaseDb, 'lists');
 const userSavedLists = (userId: string) => collection(firebaseDb, 'users', userId, 'savedLists');
+const listMembersCollection = (listId: string) => collection(firebaseDb, 'lists', listId, 'members');
 
 /**
  * Get the items subcollection reference for a list
@@ -285,6 +286,22 @@ export async function addItem(
 }
 
 /**
+ * Record or update a list member (authenticated viewer)
+ */
+export async function touchListMember(listId: string, user: UserSession): Promise<void> {
+  const membersRef = listMembersCollection(listId);
+  const memberDoc = doc(membersRef, user.id);
+  const snapshot = await getDoc(memberDoc);
+  const existing = snapshot.exists() ? snapshot.data() : null;
+  const data = {
+    displayName: user.displayName,
+    joinedAt: existing?.joinedAt ?? serverTimestamp(),
+    lastActiveAt: serverTimestamp(),
+  };
+  await setDoc(memberDoc, data, { merge: true });
+}
+
+/**
  * Update an item's details
  */
 export async function updateItem(
@@ -378,6 +395,16 @@ export async function getItems(listId: string): Promise<ListItem[]> {
 }
 
 /**
+ * Get list members
+ */
+export async function getListMembers(listId: string): Promise<ListMember[]> {
+  const membersRef = listMembersCollection(listId);
+  const q = query(membersRef, orderBy('lastActiveAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as ListMember));
+}
+
+/**
  * Subscribe to real-time updates for a list's items
  */
 export function subscribeToItems(
@@ -391,6 +418,29 @@ export function subscribeToItems(
     const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ListItem));
     callback(items);
   });
+}
+
+/**
+ * Subscribe to list members
+ */
+export function subscribeToMembers(
+  listId: string,
+  callback: (members: ListMember[]) => void,
+  onError?: (error: unknown) => void
+): () => void {
+  const membersRef = listMembersCollection(listId);
+  const q = query(membersRef, orderBy('lastActiveAt', 'desc'));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const members = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as ListMember));
+      callback(members);
+    },
+    (error) => {
+      console.error('Members subscription error', error);
+      onError?.(error);
+    }
+  );
 }
 
 // ============================================

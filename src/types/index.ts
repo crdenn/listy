@@ -240,6 +240,16 @@ export interface SavedListRef {
   lastOpenedAt: Timestamp;
 }
 
+/**
+ * Member record for a list
+ */
+export interface ListMember {
+  id: string;
+  displayName: string | null;
+  joinedAt: Timestamp;
+  lastActiveAt: Timestamp;
+}
+
 // ============================================
 // Firebase Helper Types
 // ============================================

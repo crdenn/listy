@@ -48,6 +48,12 @@ service cloud.firestore {
       // Only the authenticated list creator can delete the list
       allow delete: if request.auth != null &&
         getUserId() == resource.data.creatorId;
+
+      // Members subcollection
+      match /members/{memberId} {
+        allow read: if true;
+        allow create, update: if request.auth != null && request.auth.uid == memberId;
+      }
       
       // Items subcollection
       match /items/{itemId} {
