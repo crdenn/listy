@@ -91,6 +91,14 @@ export function AddItemForm({ onAdd, disabled = false, showCategory = false, sho
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: productUrl.trim() }),
       });
+
+      // Check if response is JSON
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        setUnfurlError('Unable to fetch link - invalid response');
+        return;
+      }
+
       const data = await res.json();
       if (!res.ok) {
         setUnfurlError(data.error || 'Unable to fetch link');
