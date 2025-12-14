@@ -8,6 +8,7 @@
  * - My Lists page for authenticated users (at root URL)
  */
 
+import { useMemo, useState } from 'react';
 import { Gift, Users, ListPlus, Loader2, Plus, Tag, Share2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,28 @@ import { CreateListDialog } from '@/components/list/CreateListDialog';
 import { useGroupMembership, useSharedLists } from '@/lib/hooks';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
+import { List } from '@/types';
+
+const isPastEvent = (list: List) => {
+  if (list.type !== 'potluck' || !list.eventDate) return false;
+  const parts = list.eventDate.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return false;
+  const [year, month, day] = parts;
+
+  // If a time is provided, use it; otherwise default to end-of-day
+  let hour = 23;
+  let minute = 59;
+  if (list.eventTime) {
+    const [h, m] = list.eventTime.split(':').map(Number);
+    if (!Number.isNaN(h) && !Number.isNaN(m)) {
+      hour = h;
+      minute = m;
+    }
+  }
+
+  const endDateTime = new Date(year, month - 1, day, hour, minute, 59, 999);
+  return endDateTime.getTime() < Date.now();
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +53,16 @@ export default function HomePage() {
   const { deleteList } = useDeleteList();
   const { toast } = useToast();
   const { groups: joinedGroups } = useGroupMembership();
+  const [showPastEvents, setShowPastEvents] = useState(false);
+
+  const pastEventCount = useMemo(
+    () => lists.filter((l) => isPastEvent(l)).length,
+    [lists]
+  );
+  const visibleLists = useMemo(
+    () => (showPastEvents ? lists : lists.filter((l) => !isPastEvent(l))),
+    [lists, showPastEvents]
+  );
 
   // Handle list deletion with refresh
   const handleDelete = async (listId: string) => {
@@ -62,59 +95,92 @@ export default function HomePage() {
   // Authenticated users see My Lists at root URL
   if (user?.isAuthenticated) {
     return (
-      <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Lists</h1>
-            <p className="text-muted-foreground mt-1">
-              Create and manage your collaborative lists
-            </p>
+      <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
+          {/* Page header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Lists</h1>
+              <p className="text-muted-foreground mt-1">
+                Create and manage your collaborative lists
+              </p>
+            </div>
+            <div className="hidden sm:block">
+              <CreateListDialog
+                onSuccess={refresh}
+                trigger={
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    New List
+                  </Button>
+                }
+              />
+            </div>
           </div>
-          <CreateListDialog
-            onSuccess={refresh}
-            trigger={
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                New List
-              </Button>
-            }
-          />
-        </div>
 
         {/* Lists grid */}
         {listsLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : lists.length === 0 ? (
+        ) : visibleLists.length === 0 ? (
           <div className="text-center py-16 space-y-4">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
               <ListPlus className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold">No lists yet</h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">
-              Create your first list to start collaborating with friends and family.
-            </p>
-            <CreateListDialog
-              onSuccess={refresh}
-              trigger={
-                <Button className="gap-2 mt-4">
-                  <Plus className="h-4 w-4" />
-                  Create Your First List
+            {lists.length === 0 ? (
+              <>
+                <h2 className="text-xl font-semibold">No lists yet</h2>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Create your first list to start collaborating with friends and family.
+                </p>
+                <CreateListDialog
+                  onSuccess={refresh}
+                  trigger={
+                    <Button className="gap-2 mt-4 w-full sm:w-auto justify-center">
+                      <Plus className="h-4 w-4" />
+                      Create Your First List
+                    </Button>
+                  }
+                />
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-semibold">No upcoming events</h2>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Past potluck/event lists are hidden. You can show them if needed.
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => setShowPastEvents(true)}
+                >
+                  Show past events ({pastEventCount})
                 </Button>
-              }
-            />
+              </>
+            )}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {lists.map((list) => (
+          <div className="space-y-3">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {visibleLists.map((list) => (
               <ListCard
                 key={list.id}
                 list={list}
                 onDelete={handleDelete}
               />
-            ))}
+              ))}
+            </div>
+            {pastEventCount > 0 && (
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPastEvents((prev) => !prev)}
+                >
+                  {showPastEvents ? 'Hide past events' : 'Show past events'}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -151,13 +217,13 @@ export default function HomePage() {
             }
 
             return (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[...allGroups.values()].map((group) => (
-                  <Link
-                    key={group.code}
-                    href={`/group/${encodeURIComponent(group.code)}`}
-                    className="flex items-center justify-between rounded-md border px-3 py-3 hover:bg-muted transition-colors"
-                  >
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[...allGroups.values()].map((group) => (
+                <Link
+                  key={group.code}
+                  href={`/group/${encodeURIComponent(group.code)}`}
+                  className="flex items-center justify-between rounded-md border px-3 py-3 hover:bg-muted transition-colors w-full box-border"
+                >
                     <div className="space-y-1">
                       <p className="font-semibold">{group.name || group.code}</p>
                       <p className="text-xs text-muted-foreground">
@@ -213,6 +279,19 @@ export default function HomePage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Mobile new list CTA */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent pt-8 pb-4 px-4">
+          <CreateListDialog
+            onSuccess={refresh}
+            trigger={
+              <Button className="w-full gap-2 shadow-lg">
+                <Plus className="h-4 w-4" />
+                New List
+              </Button>
+            }
+          />
         </div>
       </div>
     );

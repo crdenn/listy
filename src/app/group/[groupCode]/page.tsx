@@ -58,7 +58,7 @@ export default function GroupPage({ params }: PageProps) {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3">
         {user?.isAuthenticated && (
@@ -82,20 +82,26 @@ export default function GroupPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={refresh}>
+          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+            <Button variant="outline" size="sm" onClick={refresh} className="whitespace-nowrap">
               Refresh
             </Button>
             <Button
               variant={joined ? 'secondary' : 'default'}
               size="sm"
-              className="gap-2"
+              className="gap-2 whitespace-nowrap"
               onClick={handleJoinToggle}
             >
               {joined ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
               {joined ? 'Leave group' : 'Join group'}
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyLink} disabled={!shareUrl}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 whitespace-nowrap"
+              onClick={handleCopyLink}
+              disabled={!shareUrl}
+            >
               <Share2 className="h-4 w-4" />
               Copy group link
             </Button>
@@ -126,7 +132,9 @@ export default function GroupPage({ params }: PageProps) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {lists.map((list) => (
-            <ListCard key={list.id} list={list} />
+            <div className="w-full">
+              <ListCard key={list.id} list={list} />
+            </div>
           ))}
         </div>
       )}

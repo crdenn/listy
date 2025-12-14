@@ -68,7 +68,7 @@ export function ListCard({ list, onDelete }: ListCardProps) {
 
   return (
     <>
-      <Card className="group relative bg-white border border-border shadow-none rounded-lg">
+      <Card className="group relative w-full bg-white border border-border shadow-none rounded-lg box-border overflow-hidden">
         <Link href={`/list/${list.shareCode}`} className="absolute inset-0 z-0" />
         
         <CardHeader className="flex flex-row items-start justify-between space-y-0 px-4 pt-3 pb-2">

@@ -305,6 +305,7 @@ export function ItemCard({
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   disabled={isProcessing}
+                  autoFocus={false}
                 />
               </div>
               

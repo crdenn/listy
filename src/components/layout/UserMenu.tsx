@@ -85,7 +85,7 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/my-lists" className="cursor-pointer">
+          <Link href="/" className="cursor-pointer">
             <ListPlus className="mr-2 h-4 w-4" />
             My Lists
           </Link>

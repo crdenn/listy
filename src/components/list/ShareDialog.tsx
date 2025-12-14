@@ -57,7 +57,7 @@ export function ShareDialog({ shareCode, listTitle, children }: ShareDialogProps
         <DialogHeader>
           <DialogTitle>Share "{listTitle}"</DialogTitle>
           <DialogDescription>
-            Anyone with this link can view and add items to your list.
+            Share this link to give others access to the list.
           </DialogDescription>
         </DialogHeader>
         
@@ -86,19 +86,6 @@ export function ShareDialog({ shareCode, listTitle, children }: ShareDialogProps
                 )}
               </Button>
             </div>
-          </div>
-
-          {/* Share Code */}
-          <div className="space-y-2">
-            <Label htmlFor="share-code">Share Code</Label>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 px-3 py-2 bg-muted rounded-md font-mono text-sm">
-                {shareCode}
-              </code>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Users can also access the list at: /list/{shareCode}
-            </p>
           </div>
         </div>
 
